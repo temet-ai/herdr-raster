@@ -1,0 +1,5 @@
+mods/raster/projects/
+mods/raster/gpui-kit.d.ts
+mods/raster/jsconfig.json
+*.error
+*.bak*

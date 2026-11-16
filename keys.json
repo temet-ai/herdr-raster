@@ -1,0 +1,6 @@
+{
+  "layout:main-raster": {
+    "alt-up": "raster.prev",
+    "alt-down": "raster.next"
+  }
+}
