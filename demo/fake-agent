@@ -1,9 +1,15 @@
 #!/bin/sh
-# A pretend coding agent for the Raster preview: names itself, then reports states.
-# fake-agent <app> <title> <state>[:<seconds>] ...   (the last state holds forever)
+# A pretend coding agent for the Raster preview: names itself, draws a screen, then
+# reports states with OSC 7501 so Herdr treats it as that agent.
+# fake-agent [--screen <file>] <app> <title> <state>[:<seconds>] ...
+# The last state holds forever. <file> is printed as the terminal's screen (ANSI allowed).
+screen=
+[ "$1" = "--screen" ] && { screen=$2; shift 2; }
 app=$1 title=$2; shift 2
-printf '\033]0;%s\007' "$title"
-printf '\033[2J\033[H  %s\n\n  (a pretend %s for a screenshot)\n' "$title" "$app"
+printf '\033]0;%s\007\033[2J\033[H' "$title"
+# The file writes colours as bare `[…m` codes; the escape byte is added here.
+if [ -n "$screen" ] && [ -r "$screen" ]; then sed "s/\[\([0-9;]*\)m/$(printf '\033')[\1m/g" "$screen"
+else printf '\n  %s\n\n  (a pretend %s)\n' "$title" "$app"; fi
 for step in "$@"; do
   state=${step%%:*} wait=${step#*:}
   [ "$wait" = "$step" ] && wait=

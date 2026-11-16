@@ -1,0 +1,27 @@
+
+ [38;2;215;119;87m✻[0m [1mClaude Code[0m [2m(pretend, for a screenshot)[0m
+   [2m~/projects/moon-cheese[0m
+
+ [2m>[0m Count the craters on the cheese map of the moon and sort them by flavour.
+   Leave the Gouda Basin to the survey team.
+
+ [38;2;215;119;87m●[0m I'll start with the survey data, then sort by rind.
+
+ [38;2;215;119;87m●[0m [1mRead[0m(data/craters.csv)
+   [2m⎿  Read 1,204 lines[0m
+
+ [38;2;215;119;87m●[0m [1mBash[0m(cheddar-detect --region "Mare Imbrium")
+   [2m⎿  412 craters: cheddar 211, gouda 97, brie 63, stilton 41[0m
+
+ [38;2;215;119;87m●[0m Started a helper, [1mtaste-tester[0m, on sample 7: it smells faintly of Wensleydale.
+
+ [38;2;215;119;87m●[0m [1mUpdate[0m(src/flavours.rs)
+   [2m⎿  Added 12 lines: a Wensleydale arm for the Sea of Tranquillity[0m
+      [38;2;63;174;106m+    Crater::Tranquillity => Flavour::Wensleydale,[0m
+      [38;2;63;174;106m+    Crater::Copernicus   => Flavour::Cheddar { mature: true },[0m
+
+ [38;2;215;119;87m●[0m [1mBash[0m(cargo test flavours)
+   [2m⎿  test result: ok. 9 passed; 0 failed[0m
+
+ [38;2;215;119;87m✶[0m [38;2;215;119;87mCounting craters by flavour…[0m [2m(23m · esc to interrupt)[0m
+

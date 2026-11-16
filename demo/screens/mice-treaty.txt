@@ -1,0 +1,13 @@
+
+ [1mCodex[0m [2m(pretend, for a screenshot)[0m  [2m~/projects/moon-cheese[0m
+
+ [2m›[0m Agree crater rights with the mice before we publish the flavour map.
+
+ [38;2;139;124;246m•[0m The mice's delegation wants access to three craters for the winter.
+   Their counter-offer: they stop nibbling Copernicus if we leave them Brie Ridge.
+
+ [38;2;217;100;154m?[0m [1mShould I accept the treaty?[0m
+   [1m1.[0m Accept: Brie Ridge goes to the mice
+   [1m2.[0m Counter-offer with crackers
+   [1m3.[0m Ask the owls to mediate
+

@@ -7,20 +7,19 @@ spaces in one place and agents in another. Raster shows a card per machine, the 
 on it as headings, and each project's agents and terminals under it, with their state and
 how long they've been in it. On one computer it is the same list without the machine cards.
 
-![The Raster sidebar with demo data: four machine cards (teapot, biscuit, gnome-garden and marmalade), each with its icon; projects such as MOON-CHEESE and SOCK-ORACLE as headings with their logos and branches; and agents under them showing a spinner, a "Needs you" pill or a done dot next to the time in that state](preview.png)
+![Herdr with Raster in the sidebar, using demo data: four machine cards (teapot, biscuit, gnome-garden and marmalade), each with its icon; projects such as MOON-CHEESE and SOCK-ORACLE as headings with their logos and branches; agents under them with a spinner, a "Needs you" pill or a done dot and the time in that state. On the right, the shown space's two agents: Claude Code counting craters, and Codex below it asking whether to accept the mice's treaty, which is the row tinted and marked "Needs you" in the sidebar](preview.png)
 
 ## How it differs from Herdr's sidebar
 
 Herdr's own layout splits the sidebar in two: Spaces on top, Agents underneath. To know
-which project an agent belongs to you look across both lists, and Alt+↑/↓ jump a whole
-space at a time. Raster was made to put spaces and agents in one list, so you can see
+which project an agent belongs to you look across both lists. Raster was made to put spaces and agents in one list, so you can see
 where you are and move between agent sessions without hunting.
 
 | | Herdr's sidebar | Raster |
 | --- | --- | --- |
 | Spaces and agents | Two lists, each scrolled on its own | One list: each agent and terminal sits under its project |
 | Where you are | The shown space is highlighted | The machine's card has a moving rainbow edge, the project's line runs into it, and the focused agent's row is tinted in the project's colour |
-| Moving between sessions | Alt+↑/↓ go to the previous or next space | Alt+↑/↓ go one agent or terminal at a time, down the list as you see it, across projects and machines; Herdr's next/previous-agent commands follow the same order |
+| Moving between sessions | Alt+↑/↓ go to the previous or next agent in the Agents list, apart from the spaces | Alt+↑/↓ go one agent or terminal at a time, down the list as you see it, across projects and machines, skipping what you've folded; Herdr's next/previous-agent commands follow the same order |
 | Machines | A group of spaces per machine | A card per machine, with an icon and colour for its OS, in the order you drag them into |
 | One project, several spaces | One entry per space | One heading per checkout; a worktree sits under its checkout |
 | A project at a glance | The space's letter | The repo's logo, its branch, and green or red when there's work to push or pull |
