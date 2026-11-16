@@ -1,0 +1,30 @@
+#!/bin/sh
+# Whimsical repos for the Raster preview: some with logos, branches ahead or behind.
+set -e
+P=$1; mkdir -p "$P" "$P/.remotes"
+repo() { # name [logo-svg]
+  r="$P/$1"; rm -rf "$r" "$P/.remotes/$1.git"
+  git init -q -b main "$r"; git -C "$r" config user.name Demo; git -C "$r" config user.email demo@example.invalid
+  echo "# $1" > "$r/README.md"
+  [ -n "$2" ] && printf '%s' "$2" > "$r/icon.svg"
+  git -C "$r" add -A; git -C "$r" commit -qm start
+  git init -q --bare -b main "$P/.remotes/$1.git"
+  git -C "$r" remote add origin "$P/.remotes/$1.git"; git -C "$r" push -q -u origin main
+}
+ahead() { echo "$3" >> "$P/$1/README.md"; git -C "$P/$1" checkout -q -B "$2"; git -C "$P/$1" commit -qam "$3"; git -C "$P/$1" push -q -u origin "$2"; echo more >> "$P/$1/README.md"; git -C "$P/$1" commit -qam more; }
+behind() { echo x >> "$P/$1/README.md"; git -C "$P/$1" commit -qam x; git -C "$P/$1" push -q; git -C "$P/$1" reset -q --hard HEAD~1; }
+
+repo moon-cheese '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#f4d35e"/><circle cx="22" cy="24" r="6" fill="#e0b83f"/><circle cx="40" cy="38" r="8" fill="#e0b83f"/><circle cx="24" cy="44" r="4" fill="#e0b83f"/></svg>'
+repo sock-oracle '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#8b7cf6"/><path d="M24 10h16v24l10 10a8 8 0 0 1-11 11L24 40z" fill="#fff"/><rect x="24" y="16" width="16" height="5" fill="#f2a7c3"/></svg>'
+repo goose-tax '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#3fae6a"/><circle cx="36" cy="18" r="8" fill="#fff"/><path d="M30 22c-2 12-14 14-14 26 0 6 6 8 16 8s18-4 18-12c0-10-14-8-14-22z" fill="#fff"/><path d="M43 17l8 2-8 3z" fill="#f4a261"/><circle cx="38" cy="16" r="1.6" fill="#222"/></svg>'
+repo toaster-apologies
+repo dragon-dentistry '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#d9649a"/><path d="M16 44c0-16 10-28 26-28-4 4-4 8 0 10-8 0-12 6-10 12 4-2 8-2 12 2-10 0-16 4-28 4z" fill="#fff"/><path d="M36 20l4-8 2 9z" fill="#fff"/></svg>'
+repo cloud-knitting
+repo snail-mail-turbo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#e3814f"/><circle cx="34" cy="30" r="14" fill="#fff"/><circle cx="34" cy="30" r="7" fill="none" stroke="#e3814f" stroke-width="3"/><path d="M10 48h40c4 0 6-4 4-6H14c-3 0-4 4-4 6z" fill="#fff"/><path d="M14 42l-4-10M18 42l0-11" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>'
+repo pancake-physics
+repo owl-parliament
+
+ahead sock-oracle find-the-left-one "Pairs socks by vibe"
+ahead dragon-dentistry fire-safe-floss "Flame-proof floss"
+behind cloud-knitting
+git -C "$P/moon-cheese" worktree add -q -b crater-survey "$P/moon-cheese-crater-survey"

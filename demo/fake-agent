@@ -1,0 +1,17 @@
+#!/bin/sh
+# A pretend coding agent for the Raster preview: names itself, then reports states.
+# fake-agent <app> <title> <state>[:<seconds>] ...   (the last state holds forever)
+app=$1 title=$2; shift 2
+printf '\033]0;%s\007' "$title"
+printf '\033[2J\033[H  %s\n\n  (a pretend %s for a screenshot)\n' "$title" "$app"
+for step in "$@"; do
+  state=${step%%:*} wait=${step#*:}
+  [ "$wait" = "$step" ] && wait=
+  case $state in
+    blocked) printf '\033]7501;state=blocked:app=%s:kind=question\007' "$app" ;;
+    *) printf '\033]7501;state=%s:app=%s\007' "$state" "$app" ;;
+  esac
+  printf '\033]0;%s\007' "$title"
+  [ -n "$wait" ] && sleep "$wait"
+done
+exec sleep infinity

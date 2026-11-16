@@ -8,7 +8,7 @@
 
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { spaces, machines, panes, agents, terminals, focused, setAgentOrder, run, nextCommand, openOverlay, settings, exec, hc, theme, shared, setShared, watchFolder, window, layout, appHome, home } from "herdr";
+import { spaces, machines, panes, agents, terminals, focused, setAgentOrder, run, nextCommand, openOverlay, settings, exec, hc, theme, shared, setShared, watchFolder, window, layout, appHome, home, props } from "herdr";
 
 // Project icons: a repo's own logo in place of its letter. Kept as a 64px PNG in
 // projects/<repo>.png here; put your own file there to choose one (it wins). Found in
@@ -150,8 +150,13 @@ export function tone(t, status) {
 }
 
 export default class Spaces extends View {
-  init(props, cx) {
-    this.cloneRoots = Array.isArray(props?.cloneRoots) ? props.cloneRoots : CLONE_ROOTS;
+  init(_props, cx) {
+    // A layout block's props come through props(), not init's argument.
+    const given = props() ?? {};
+    this.cloneRoots = Array.isArray(given.cloneRoots) ? given.cloneRoots : CLONE_ROOTS;
+    // Machines whose kind (and, for this computer, name) you set rather than detect:
+    // { "<machine>" | "local": "<kind>" | { kind, host } }.
+    this.setKinds = given.kinds ?? {};
     this.git = {}; // where() -> { name, branch, ahead, behind, repo, linked }, null: not a repo
     this.checked = {}; // where() -> when it was last looked at
     this.unsure = new Set(); // where()s git couldn't answer for (a machine away)
@@ -359,7 +364,8 @@ export default class Spaces extends View {
   // How a machine shows: its name (this computer: its host name), icon, color, and
   // what it is (for the tooltip).
   machineInfo(m) {
-    const found = this.kinds[m ?? "local"];
+    const set = this.setKinds[m ?? "local"];
+    const found = set ? { ...this.kinds[m ?? "local"], ...(typeof set === "string" ? { kind: set } : set) } : this.kinds[m ?? "local"];
     const look = KINDS[found?.kind] ?? { icon: null, color: "muted", label: found?.id ?? found?.os ?? "Server" };
     return { ...look, name: m ?? found?.host ?? "This computer", about: found?.model || look.label };
   }
