@@ -275,7 +275,8 @@ export default class Spaces extends View {
   localClones() {
     this.clones ??= (async () => {
       const roots = this.cloneRoots.map((r) => (r.startsWith("/") ? r : `${home()}/${r}`));
-      const script = `find "$@" -maxdepth 5 -name .git -prune -print 2>/dev/null | grep -v '/\\.claude/' | while read -r g; do
+      // -H: a clone folder that is itself a symlink (~/projects -> /data/projects) is followed.
+      const script = `find -H "$@" -maxdepth 5 -name .git -prune -print 2>/dev/null | grep -v '/\\.claude/' | while read -r g; do
   r=\${g%/.git}; o=$(git -C "$r" remote get-url origin 2>/dev/null); printf '%s\\t%s\\n' "$r" "$o"; done`;
       const r = await exec("sh", ["-c", script, "sh", ...roots], { timeout: 30000 });
       const byFolder = {}, byOrigin = {};
