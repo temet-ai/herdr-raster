@@ -9,6 +9,22 @@ how long they've been in it. On one computer it is the same list without the mac
 
 ![The Raster sidebar with demo data: four machine cards (teapot, biscuit, gnome-garden and marmalade), each with its icon; projects such as MOON-CHEESE and SOCK-ORACLE as headings with their logos and branches; and agents under them showing a spinner, a "Needs you" pill or a done dot next to the time in that state](preview.png)
 
+## How it differs from Herdr's sidebar
+
+Herdr's own layout splits the sidebar in two: Spaces on top, Agents underneath. To know
+which project an agent belongs to you look across both lists, and Alt+↑/↓ jump a whole
+space at a time. Raster was made to put spaces and agents in one list, so you can see
+where you are and move between agent sessions without hunting.
+
+| | Herdr's sidebar | Raster |
+| --- | --- | --- |
+| Spaces and agents | Two lists, each scrolled on its own | One list: each agent and terminal sits under its project |
+| Where you are | The shown space is highlighted | The machine's card has a moving rainbow edge, the project's line runs into it, and the focused agent's row is tinted in the project's colour |
+| Moving between sessions | Alt+↑/↓ go to the previous or next space | Alt+↑/↓ go one agent or terminal at a time, down the list as you see it, across projects and machines; Herdr's next/previous-agent commands follow the same order |
+| Machines | A group of spaces per machine | A card per machine, with an icon and colour for its OS, in the order you drag them into |
+| One project, several spaces | One entry per space | One heading per checkout; a worktree sits under its checkout |
+| A project at a glance | The space's letter | The repo's logo, its branch, and green or red when there's work to push or pull |
+
 ## What you can do with it
 
 - **See which agent needs you.** Each agent is listed under its project, with its sub-agents
