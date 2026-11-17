@@ -68,7 +68,9 @@ The mod fills the `spaces` block of the sidebar (268px wide in `main-raster`) on
   10px `dim`) and its status mark, both aligned with the first line.
 - **Tab-mates**: agents sharing a tab are joined by a bracket in the gutter at 5px, 2px
   in the space's color. It starts with a rounded corner at the tab's name (a 16px row,
-  monospace 9.5px uppercase in the space's color at 85%, "TAB n" when nobody named it),
+  monospace 9.5px uppercase in the space's color at 85%, "TAB n" when nobody named it;
+  clicking it renames the tab in place: Enter or clicking away keeps it, Escape drops it,
+  an empty name gives the tab its number back),
   ticks in to 2px short of each agent's icon centre, runs plainly past sub-agent rows and
   ends in a rounded corner at the last agent. At 60% opacity, breathing between 50% and
   100% every 2.6s while any of them works.

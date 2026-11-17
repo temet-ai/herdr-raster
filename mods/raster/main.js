@@ -7,7 +7,7 @@
 // https://github.com/temet-ai/herdr-raster
 
 import { View, div, svg, image } from "gpui-kit";
-import { v_flex, h_flex } from "gpui-base";
+import { v_flex, h_flex, InputState, Input } from "gpui-base";
 import { spaces, machines, panes, agents, terminals, focused, setAgentOrder, run, nextCommand, openOverlay, settings, exec, hc, theme, shared, setShared, watchFolder, window, layout, appHome, home, props } from "herdr";
 
 // Project icons: a repo's own logo in place of its letter. Kept as a 64px PNG in
@@ -847,7 +847,7 @@ export default class Spaces extends View {
       // The bracket starts at the tab's name, so its first agent takes a tick like the rest.
       const tab = link === "first" ? (w.tabs ?? []).find((x) => x.id === a.tab) : null;
       return [
-        ...(tab ? [{ label: tab.named ? tab.name : `tab ${tab.name}`, busy }] : []),
+        ...(tab ? [{ label: tab, busy }] : []),
         { a, link: link === "first" ? "mid" : link, busy },
         ...this.tree(a.address).map((s) => ({ s, link: link && link !== "last" ? "through" : null, busy })),
       ];
@@ -861,15 +861,42 @@ export default class Spaces extends View {
   }
 
   // The tab's name over its agents, where their bracket begins.
-  tabLabel(name, busy, w, t) {
+  // Click it to rename the tab in place: Enter or clicking away keeps the new name,
+  // Escape drops it, and an empty name gives the tab back its number.
+  tabLabel(tab, busy, w, t) {
     const c = spaceFill(w, t);
-    return div().relative().flex_none().h(16).mt(2)
+    const editing = this.renaming?.id === tab.id;
+    return div().id(`tab-label-${tab.id}`).relative().flex_none().h(16).mt(2)
       .child(div().absolute().left(5).top(8).bottom(0).w(9).border_l(2).border_t(2).rounded_tl(6).border_color(c)
         .when(busy, (el) => el.loop("opacity", { from: 0.5, to: 1, period: 2600 }))
         .when(!busy, (el) => el.opacity(0.6)))
-      .child(div().absolute().left(18).top(0).h(16).right(8).flex().items_center()
-        .font_family(mono()).text_size(9.5).text_color(c).opacity(0.85).truncate()
-        .child(name.toUpperCase()));
+      .when(editing, (el) => el.child(div().absolute().left(16).top(-1).h(18).right(8).px(2).rounded(4)
+        .border_1().border_color(c + "90").bg(t.chrome)
+        .on_key_down((e, cx) => { if (e.key === "escape") this.endRename(false, cx); })
+        .child(Input.new(this.renaming.input).w_full().h_full().font_family(mono()).text_size(9.5).text_color(t.foreground))))
+      .when(!editing, (el) => el.child(div().id(`tab-name-${tab.id}`).absolute().left(18).top(0).h(16).max_w(220).flex().items_center()
+        .cursor_text().tooltip("Rename this tab")
+        .font_family(mono()).text_size(9.5).text_color(c).opacity(0.85).hover((s) => s.opacity(1)).truncate()
+        .on_click((_e, cx) => this.startRename(tab, cx))
+        .child((tab.named ? tab.name : `tab ${tab.name}`).toUpperCase())));
+  }
+
+  startRename(tab, cx) {
+    const input = InputState.new({ value: tab.named ? tab.name : "", placeholder: "name this tab" });
+    this.renaming = { id: tab.id, input };
+    input.on("submit", (_e, cx) => this.endRename(true, cx));
+    input.on("blur", (_e, cx) => this.endRename(true, cx));
+    cx.notify();
+    cx.timer.after(30, () => input.focus());
+  }
+
+  endRename(keep, cx) {
+    const r = this.renaming;
+    if (!r) return;
+    this.renaming = null;
+    const name = r.input.value().trim();
+    if (keep) run("tab.rename", { id: r.id, name });
+    cx.notify();
   }
 
   // One row's piece of the bracket joining a tab's agents: down the gutter left of
