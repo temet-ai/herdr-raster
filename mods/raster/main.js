@@ -807,14 +807,17 @@ export default class Spaces extends View {
 
   // What an agent is doing, in a few words: a tab someone named, else the agent's
   // own title (Claude Code titles itself after the task), else its program. Its
-  // folder goes in front when it isn't the space's.
+  // folder goes in front when it isn't the space's. A tab's name speaks for an agent
+  // only when it is the tab's one agent: two agents in one named tab each showed the
+  // tab's name and nothing of their own (2026-11-17).
   agentLabel(a, w) {
     const tab = (w.tabs ?? []).find((x) => x.id === a.tab);
     const p = this.paneByTerminal.get(a.address);
     const prog = a.program?.name ?? "";
     const live = clean(p?.title ?? a.title);
     const telling = live && live !== prog && !/^[~/]|^[A-Za-z]:\\/.test(live) && !live.includes("@") && live.toLowerCase() !== a.program?.key;
-    const what = tab?.named ? tab.name : telling ? live : prog || a.title || a.address;
+    const alone = (this.bySpace.get(w.id) ?? []).filter((x) => x.tab === a.tab).length < 2;
+    const what = tab?.named && (alone || !telling) ? tab.name : telling ? live : prog || a.title || a.address;
     return { what, folder: this.elsewhere(p?.cwd, w), cwd: p?.cwd ?? "" };
   }
 
