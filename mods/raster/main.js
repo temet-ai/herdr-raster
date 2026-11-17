@@ -210,10 +210,14 @@ export default class Spaces extends View {
   }
 
   // The list as the keyboard walks it: each agent and terminal under an open space,
-  // else the space itself. Folded machines are skipped.
+  // else the space itself, machine by machine in the order the cards are drawn.
+  // Folded machines are skipped.
   stops() {
     const remote = this.rows.some((r) => r.w.machine) || this.machines.length;
-    return this.rows.filter((r) => !remote || !this.folded.has(r.w.machine ?? null)).flatMap((r) => {
+    const rank = new Map((this.machineNames ?? []).map((m, i) => [m, i]));
+    const at = (r) => rank.get(r.w.machine ?? null) ?? 1e6;
+    const rows = remote ? [...this.rows].sort((a, b) => at(a) - at(b)) : this.rows;
+    return rows.filter((r) => !remote || !this.folded.has(r.w.machine ?? null)).flatMap((r) => {
       const under = this.collapsed || this.foldedSpaces.has(r.head?.id ?? r.w.id) ? [] : [
         ...(this.bySpace.get(r.w.id) ?? []).map((a) => a.pane),
         ...(this.shellsBySpace.get(r.w.id) ?? []).map((p) => p.pane),
@@ -578,6 +582,7 @@ export default class Spaces extends View {
     const loadingRow = m => h_flex().id(`machine-loading-${m ?? "local"}`).h(28).flex_none().px(collapsed ? 0 : 8).items_center().when(collapsed, el => el.justify_center()).text_size(12).text_color(t.dim).child(collapsed ? "…" : "Loading…");
     if (!remote.length) return loading(null) && !rows.length ? [loadingRow(null)] : rows.flatMap((r) => draw(r, false));
     const machineNames = this.sortMachines([null, ...remote]);
+    this.machineNames = machineNames;
     return machineNames.flatMap((m, mi) => {
       const mine = rows.filter((r) => (r.w.machine ?? null) === m);
       const repair = this.reconnecting[m];

@@ -10,6 +10,12 @@ Sections use these headings, leaving out any with nothing in them: **New**,
 
 ## Unreleased
 
+### Fixed
+
+- **Alt+↑/↓ follows the machine cards as drawn.** With more than one machine, the
+  keys walked spaces in Herdr's own order, so after reordering the cards they jumped
+  between machines and skipped some. They now go card by card, top to bottom.
+
 ## 0.2.0 (2026-11-17)
 
 ### New
