@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# The notes for a release: its section of CHANGELOG.md, then how to install or
+# upgrade and the full comparison with the release before.
+#
+#   scripts/release-notes 0.2.0 [owner/repo]   # prints Markdown
+#
+# Exits 1 when CHANGELOG.md has no section for the version, or it is empty: the
+# release workflow runs this first, so a tag without notes stops there.
+set -euo pipefail
+
+version="${1:?usage: scripts/release-notes <version> [owner/repo]}"
+repo="${2:-temet-ai/herdr-raster}"
+root="$(cd "$(dirname "$0")/.." && pwd)"
+changelog="$root/CHANGELOG.md"
+
+section="$(awk -v v="$version" '
+  /^## / { if (found) exit; if (index($0, "## " v " ") == 1 || $0 == "## " v) { found = 1; next } }
+  found { print }
+' "$changelog")"
+
+if [[ -z "$(printf '%s' "$section" | tr -d '[:space:]')" ]]; then
+  echo "release-notes: CHANGELOG.md has no section for $version (a heading '## $version (date)' with what changed)" >&2
+  exit 1
+fi
+
+# The release before this one, for the comparison link: in version order, the tag
+# after v<version>, or the newest when v<version> is not tagged yet.
+previous="$(git -C "$root" tag --list 'v*' --sort=-version:refname | awk -v v="v$version" '
+  NR == 1 { first = $0 }
+  seen && !found { print; found = 1 }
+  $0 == v { seen = 1 }
+  END { if (!found && !seen && first != "") print first }
+')"
+
+printf '%s\n' "$section" | sed -e '/./,$!d'
+cat <<EOF
+
+## Install or upgrade
+
+Download \`raster-$version.zip\` below (check it against \`checksums.txt\`), then:
+
+\`\`\`sh
+unzip raster-$version.zip
+cp -r raster-$version/mods/raster ~/.config/herdr-app/mods/
+cp raster-$version/layouts/main-raster.json ~/.config/herdr-app/layouts/
+herdr-app check ~/.config/herdr-app/mods/raster
+\`\`\`
+
+From a clone instead: \`git pull\` (or \`git checkout v$version\`) and the same two
+copies. Upgrading over an older Raster keeps your project logos in
+\`mods/raster/projects/\`. The README's Install covers the layout switch and keys.
+To go back, copy the previous release's \`mods/raster\` the same way.
+EOF
+if [[ -n "$previous" ]]; then
+  printf '\nEvery commit since %s: https://github.com/%s/compare/%s...v%s\n' "${previous#v}" "$repo" "$previous" "$version"
+fi

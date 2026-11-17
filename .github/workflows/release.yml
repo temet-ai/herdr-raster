@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  # Checks and packages without publishing (publish needs a tag).
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check tag and mod version
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(jq -r .version mods/raster/mod.json)"
+          [[ "$actual" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            test "${GITHUB_REF_NAME#v}" = "$actual"
+          fi
+          echo "VERSION=$actual" >> "$GITHUB_ENV"
+      # The release's notes come from its CHANGELOG.md section; a tag without one
+      # stops here.
+      - name: Write the release notes
+        run: scripts/release-notes "$VERSION" "$GITHUB_REPOSITORY" > notes.md
+      - name: Check the mod parses
+        run: node --check mods/raster/main.js
+      - name: Package
+        run: scripts/package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: raster-${{ env.VERSION }}
+          path: dist/
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --title "Raster $VERSION" --notes-file notes.md \
+            "dist/raster-$VERSION.zip" dist/checksums.txt

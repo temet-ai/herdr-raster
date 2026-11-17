@@ -1,7 +1,7 @@
 {
   "place": "none",
   "title": "Raster",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "focusable": true,
   "cloned_from": {
     "name": "spaces",

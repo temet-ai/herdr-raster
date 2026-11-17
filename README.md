@@ -47,6 +47,10 @@ where you are and move between agent sessions without hunting.
   Click a machine's header to fold its card, or a project's chevron to fold the project; a
   folded project shows how many terminals it has and its most urgent state. The **+** on a
   machine's header starts a new space on that machine.
+- **See a tab's agents together.** Agents that share a tab are joined by a bracket in the
+  project's colour, under the tab's name, breathing while any of them works. Each shows
+  its own title. Click the tab's name to rename it in place (Enter keeps it, Escape drops
+  it, empty gives the tab its number back).
 - **Walk the list with keys.** Alt+↑ and Alt+↓ move one agent or terminal at a time, in the
   order the list shows, and wrap at the ends. Herdr's own next/previous-agent commands
   (`agent.next`, `agent.prev`) follow the same order.
@@ -55,17 +59,25 @@ where you are and move between agent sessions without hunting.
 
 ## Install
 
-Raster 0.1.0 is built from the Spaces mod of Herdr 0.1.15 and was checked on the Herdr
+Raster 0.2.0 is built from the Spaces mod of Herdr 0.1.15 and was checked on the Herdr
 desktop app 0.1.16. It runs `git`, a one-off probe of each machine and a few other programs; see
 [What it runs on your machines](#what-it-runs-on-your-machines) before you add it.
 
+Download `raster-<version>.zip` from the
+[latest release](https://github.com/temet-ai/herdr-raster/releases/latest), or clone the
+repo (`git clone https://github.com/temet-ai/herdr-raster.git`); then, from the unzipped
+or cloned folder:
+
 ```sh
-git clone https://github.com/temet-ai/herdr-raster.git
-cp -r herdr-raster/mods/raster ~/.config/herdr-app/mods/
-cp herdr-raster/layouts/main-raster.json ~/.config/herdr-app/layouts/
+cp -r mods/raster ~/.config/herdr-app/mods/
+cp layouts/main-raster.json ~/.config/herdr-app/layouts/
 herdr-app check ~/.config/herdr-app/mods/raster
 herdr-app do layout.switch '{"name":"main-raster"}'
 ```
+
+To upgrade, copy the new release's `mods/raster` over the old one the same way; your
+project logos are kept. What changed in each release is in [CHANGELOG.md](CHANGELOG.md),
+and how releases are made in [docs/RELEASING.md](docs/RELEASING.md).
 
 `herdr-app check` should end with `check passed`. After the switch, the sidebar shows the
 "Spaces" header and your spaces as project headings with their agents underneath.

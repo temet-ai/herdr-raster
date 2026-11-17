@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# The release archive: the committed mod, its layout and keys, licences, README and
+# CHANGELOG, as dist/raster-<version>.zip with dist/checksums.txt. Built from git, so
+# local files (project logos, gpui-kit.d.ts, *.error) never get in.
+#
+#   scripts/package [ref]   # default HEAD
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+ref="${1:-HEAD}"
+version="$(git -C "$root" show "$ref:mods/raster/mod.json" | jq -r .version)"
+mkdir -p "$root/dist"
+git -C "$root" archive --format=zip --prefix="raster-$version/" -o "$root/dist/raster-$version.zip" "$ref" \
+  mods/raster layouts keys.json LICENSE LICENSE-APACHE README.md CHANGELOG.md
+(cd "$root/dist" && sha256sum "raster-$version.zip" > checksums.txt)
+echo "$root/dist/raster-$version.zip"
