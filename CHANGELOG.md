@@ -19,6 +19,12 @@ Sections use these headings, leaving out any with nothing in them: **New**,
 
 ### Fixed
 
+- **Machine cards no longer get stuck mid-drag.** A press on a card's header became a
+  drag at once, and a release outside the sidebar never ended it, so the card stayed
+  faded with a drop line following the pointer, and the shown machine's card filled
+  with its rainbow. A drag now starts only once the pointer moves, ends when the
+  pointer leaves the sidebar or you click elsewhere, and a dragged card is drawn
+  without its rainbow.
 - **Alt+↑/↓ follows the machine cards as drawn.** With more than one machine, the
   keys walked spaces in Herdr's own order, so after reordering the cards they jumped
   between machines and skipped some. They now go card by card, top to bottom.

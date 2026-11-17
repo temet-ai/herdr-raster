@@ -190,6 +190,8 @@ export default class Spaces extends View {
     this.machineOrder = JSON.parse(localStorage.getItem("machines.order") ?? "null");
     this.mPressed = undefined; // the machine being dragged (null is this computer)
     this.mOver = undefined;
+    this.mFrom = null; // where the press on a machine's header was
+    this.mDragging = false; // the press has moved far enough to be a drag
     this.projectIcons = {}; // repo name -> its icon's path here, null: none (or looking)
     this.kinds = JSON.parse(localStorage.getItem("machines.kinds") ?? "{}");
     this.detecting = new Set();
@@ -613,7 +615,7 @@ export default class Spaces extends View {
         .when(!collapsed, el => el.rounded(7).tooltip(info.about))
         .when(collapsed, el => el.mt(4).w(RAIL_CELL).justify_center().rounded(6).tooltip(login ? `${m} needs a login: run ${login}. Click for Copy.` : `${label} · ${info.about}${m ? ` · ${connected ? "connected" : (machine?.state ?? "asleep").replace(/_/g, " ")}` : ""}`))
         .cursor_pointer().hover(s => s.bg(t.hover))
-        .when(!collapsed, el => el.on_mouse_down("left", () => { this.mPressed = m; this.mOver = m; }))
+        .when(!collapsed, el => el.on_mouse_down("left", (e) => { this.mPressed = m; this.mOver = m; this.mFrom = e.position; this.mDragging = false; }))
         .on_click((_e, cx) => {
           if (collapsed && login) { run("app.settings", { section: "machines" }); return; }
           folded ? this.folded.delete(m) : this.folded.add(m);
@@ -663,23 +665,34 @@ export default class Spaces extends View {
       // Drag a machine's header onto another card to move it there: above it from the
       // card's top half, below it from the bottom half. A lavender line shows where.
       const drag = (cards) => [div().id(`machine-drop-${m ?? "local"}`).relative().flex_none().mt(8)
-        .when(this.mPressed === m && this.mOver !== m, (el) => el.opacity(0.5))
-        .when(this.mPressed !== undefined && this.mOver === m && this.mPressed !== m, (el) => el.child(
+        .when(this.mDragging && this.mPressed === m && this.mOver !== m, (el) => el.opacity(0.5))
+        .when(this.mDragging && this.mOver === m && this.mPressed !== m, (el) => el.child(
           div().absolute().left(4).right(4).h(2).rounded(1).bg(t.accent)
             .when(this.mAfter, (line) => line.bottom(-5)).when(!this.mAfter, (line) => line.top(-5))))
         .on_mouse_move((e, cx) => {
           if (this.mPressed === undefined) return;
+          // A press only becomes a drag once it has moved, so a click on the header
+          // (which folds the card) never shows the drop line.
+          if (!this.mDragging) {
+            const dx = e.position.x - (this.mFrom?.x ?? e.position.x), dy = e.position.y - (this.mFrom?.y ?? e.position.y);
+            if (dx * dx + dy * dy < 25) return;
+            this.mDragging = true;
+          }
           const after = e.local_position.y > e.bounds.height / 2;
           if (this.mOver !== m || this.mAfter !== after) { this.mOver = m; this.mAfter = after; cx.notify(); }
         })
         .on_mouse_up("left", (_e, cx) => {
-          const src = this.mPressed;
+          const src = this.mPressed, dragging = this.mDragging;
           this.mPressed = this.mOver = undefined;
-          if (src !== undefined && src !== m) this.moveMachine(machineNames, src, m, this.mAfter);
+          this.mDragging = false;
+          if (dragging && src !== undefined && src !== m) this.moveMachine(machineNames, src, m, this.mAfter);
           cx.notify();
         })
         .children(cards.map((c) => c.mt(0)))];
-      const card = (kids) => collapsed ? kids : drag(connected && here ? rainbow(kids) : plain(kids));
+      // A dragged card is faded, and fading the rainbow card lets its hue strip show
+      // through the inner card, so it is drawn plain while it moves.
+      const lifted = this.mDragging && this.mPressed === m;
+      const card = (kids) => collapsed ? kids : drag(connected && here && !lifted ? rainbow(kids) : plain(kids));
       if (!collapsed && rebuilt) return card([head]);
       const cell = collapsed ? railCell : (el) => el;
       const guidance = !collapsed && login ? [v_flex().px(8).pb(6).gap(3).flex_none()
@@ -692,6 +705,14 @@ export default class Spaces extends View {
             .child(this.copiedLogin === login ? "Copied" : "Copy")))] : [];
       return card([cell(head), ...guidance, ...(folded ? [] : mine.length ? mine.flatMap((r, i) => draw(r, i === mine.length - 1)) : [loading(m) ? loadingRow(m) : cell(empty)])]);
     });
+  }
+
+  endDrags(cx) {
+    if (this.pressed === null && this.mPressed === undefined) return;
+    this.pressed = this.over = null;
+    this.mPressed = this.mOver = undefined;
+    this.mDragging = false;
+    cx.notify();
   }
 
   // The branch under the space's line: shown off main/master (and when the space's name
@@ -1087,6 +1108,10 @@ export default class Spaces extends View {
     }
     return v_flex().id("raster").track_focus(this.handle).on_key_down((e, cx) => this.key(e, cx))
       .size_full().min_h(0).bg(t.chrome).text_size(13)
+      // A release outside the sidebar never reaches it, so leaving the sidebar or
+      // pressing outside it ends any drag rather than leaving one stuck.
+      .on_hover((hovered, cx) => { if (!hovered) this.endDrags(cx); })
+      .on_mouse_down_out((_e, cx) => this.endDrags(cx))
       .when(this.handle.is_focused(), (el) => el.border_r_2().border_color(t.accent))
       .child(h_flex().h(31).pl(16).pr(10).items_center().justify_between().text_size(11.5).text_color(t.dim)
         .when(collapsed, el => el.pl(0).pr(0).justify_center())
@@ -1094,7 +1119,7 @@ export default class Spaces extends View {
         .child(div().id("space-new").size(26).flex_none().flex().items_center().justify_center().rounded(6).hover(s => s.bg(t.hover).text_color(t.foreground))
           .on_click(() => run("space.new")).child(svg("mods/workspace-chrome/plus.svg").size(14))))
       .child(v_flex().flex_1().min_h(0).px(collapsed ? 0 : 8).pb(14).overflow_y_scrollbar().mode("always")
-        .on_mouse_up("left", (_e, cx) => { this.pressed = null; this.mPressed = this.mOver = undefined; cx.notify(); })
+        .on_mouse_up("left", (_e, cx) => this.endDrags(cx))
         .children(this.grouped(t, collapsed)));
   }
 
