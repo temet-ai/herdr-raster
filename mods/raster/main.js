@@ -8,7 +8,7 @@
 
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { spaces, machines, panes, agents, terminals, focused, setAgentOrder, run, nextCommand, openOverlay, settings, exec, hc, theme, shared, setShared, watchFolder, window, layout, appHome, home, props } from "herdr";
+import { spaces, machines, panes, agents, terminals, focused, setAgentOrder, run, nextCommand, openOverlay, settings, exec, hc, theme, shared, setShared, watchFolder, readTextFile, window, layout, appHome, home, props } from "herdr";
 
 // Project icons: a repo's own logo in place of its letter. Kept as a 64px PNG in
 // projects/<repo>.png here; put your own file there to choose one (it wins). Found in
@@ -157,6 +157,17 @@ export default class Spaces extends View {
     // Machines whose kind (and, for this computer, name) you set rather than detect:
     // { "<machine>" | "local": "<kind>" | { kind, host } }.
     this.setKinds = given.kinds ?? {};
+    // A folder of Claude Code status-line JSON, one `<terminal>.json` per terminal here,
+    // whose `session_name` names an agent whose title is only its program's name.
+    this.statusDir = typeof given.statusDir === "string" && given.statusDir
+      ? (given.statusDir.startsWith("/") ? given.statusDir : `${home()}/${given.statusDir}`) : null;
+    this.sessionNames = {}; // terminal -> its session's name
+    if (this.statusDir) cx.spawn(async (cx) => {
+      for (;;) {
+        if (await this.readNames()) cx.notify();
+        await watchFolder(this.statusDir);
+      }
+    });
     this.git = {}; // where() -> { name, branch, ahead, behind, repo, linked }, null: not a repo
     this.checked = {}; // where() -> when it was last looked at
     this.unsure = new Set(); // where()s git couldn't answer for (a machine away)
@@ -810,8 +821,24 @@ export default class Spaces extends View {
     });
   }
 
+  // Session names of this computer's agents from `statusDir`; true when one changed.
+  async readNames() {
+    const next = {};
+    for (const a of agents()) {
+      if (a.address.includes("/")) continue;
+      try {
+        const name = JSON.parse((await readTextFile(`${this.statusDir}/${a.address}.json`)) || "{}").session_name;
+        if (typeof name === "string" && name.trim()) next[a.address] = name.trim();
+      } catch { /* no file, or one half written: no name */ }
+    }
+    const same = JSON.stringify(next) === JSON.stringify(this.sessionNames);
+    this.sessionNames = next;
+    return !same;
+  }
+
   // What an agent is doing, in a few words: a tab someone named, else the agent's
-  // own title (Claude Code titles itself after the task), else its program. Its
+  // own title (Claude Code titles itself after the task), else its session's name
+  // (`statusDir`: a session that never titled itself), else its program. Its
   // folder goes in front when it isn't the space's. A tab's name speaks for an agent
   // only when it is the tab's one agent: two agents in one named tab each showed the
   // tab's name and nothing of their own (2026-11-17).
@@ -823,7 +850,7 @@ export default class Spaces extends View {
     const telling = live && live !== prog && !/^[~/]|^[A-Za-z]:\\/.test(live) && !live.includes("@") && live.toLowerCase() !== a.program?.key;
     const alone = (this.bySpace.get(w.id) ?? []).filter((x) => x.tab === a.tab).length < 2;
     // Tab-mates have the tab's name over them already, so they never repeat it.
-    const what = tab?.named && alone ? tab.name : telling ? live : prog || a.title || a.address;
+    const what = tab?.named && alone ? tab.name : telling ? live : this.sessionNames[a.address] || prog || a.title || a.address;
     return { what, folder: this.elsewhere(p?.cwd, w), cwd: p?.cwd ?? "" };
   }
 

@@ -10,6 +10,13 @@ Sections use these headings, leaving out any with nothing in them: **New**,
 
 ## Unreleased
 
+### New
+
+- **Agents that never titled themselves can show their session's name.** A Claude
+  Code session started by a script often keeps the title "Claude Code". Point the
+  new `statusDir` setting at a folder of its status-line JSON and Raster shows the
+  session's `session_name` instead.
+
 ### Fixed
 
 - **Alt+↑/↓ follows the machine cards as drawn.** With more than one machine, the

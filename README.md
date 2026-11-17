@@ -104,7 +104,7 @@ and give `keys.json` the same two keys in a section named after your layout,
 
 ## Layout settings
 
-Both settings go in the block's `props`.
+All settings go in the block's `props`.
 
 `cloneRoots` sets where Raster looks for clones on this computer, which it uses to find the
 logo of a project that runs on another machine. The default is `~/projects`, `~/code`,
@@ -126,6 +126,15 @@ computer shows under:
 The kinds are `omarchy pi mac wsl docker freebsd ubuntu debian fedora arch endeavouros
 manjaro nixos alpine opensuse linuxmint gentoo rocky almalinux centos rhel kali linux`.
 Anything else gets Herdr's plain server icon.
+
+`statusDir` names agents whose title is only their program's name ("Claude Code"). It is a
+folder holding Claude Code's status-line JSON as `<terminal>.json`, one file per Herdr
+terminal on this computer: have your status-line command save its input there under
+`$HC_TERMINAL_ID`. Raster shows the file's `session_name`:
+
+```json
+"props": { "statusDir": "/run/user/1000/herdr-pane" }
+```
 
 ## Project logos
 

@@ -133,10 +133,12 @@ in it is done or needs you, else `·`, in that status's colour.
 - `layouts/main-raster.json`: Herdr's `main` with its `spaces` and `agents` blocks replaced
   by one `spaces` block (`weight: 1`, `min: 90`) holding `{"mod": "raster"}`.
 - `keys.json`: `"layout:main-raster": { "alt-up": "raster.prev", "alt-down": "raster.next" }`.
-- Layout props, both optional: `cloneRoots`, the folders searched for clones on this
+- Layout props, all optional: `cloneRoots`, the folders searched for clones on this
   computer (default `projects code src dev Developer git repos work Documents/github.com`,
   relative to home); `kinds`, `{ "<machine>" | "local": "<kind>" | { kind, host } }`, sets
-  a machine's kind (and this computer's shown name) instead of detecting it.
+  a machine's kind (and this computer's shown name) instead of detecting it; `statusDir`,
+  a folder of Claude Code status-line JSON (`<terminal>.json`, local terminals only,
+  watched), whose `session_name` labels an agent whose title is only its program's name.
 - Shipped mods: art from `workspace-chrome` (`plus`, `chevron-down`, `chevron-right`,
   `spinner`, `branch`, `server`, `monitor` SVGs); `menu` for the right-click popup
   (`openOverlay({mod: "menu", kind: "popup", width: 200, height: 260, props: {tab:
