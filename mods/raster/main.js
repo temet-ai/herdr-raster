@@ -836,14 +836,37 @@ export default class Spaces extends View {
     const list = this.bySpace.get(w.id) ?? [];
     const shells = this.shellsBySpace.get(w.id) ?? [];
     if ((!list.length && !shells.length) || this.foldedSpaces.has(w.id)) return [];
-    const items = [
-      ...list.flatMap((a) => [{ a }, ...this.tree(a.address).map((s) => ({ s }))]),
-      ...shells.map((p) => ({ p })),
-    ];
+    // Agents sharing a tab (they come in tab order) are joined by a bracket: `link` is
+    // where a row sits in it ("first", "mid", "last"), `through` a sub-agent row it passes.
+    const mates = (a) => list.filter((x) => x.tab === a.tab);
+    const items = list.flatMap((a) => {
+      const m = mates(a), k = m.indexOf(a);
+      const link = m.length < 2 ? null : k === 0 ? "first" : k === m.length - 1 ? "last" : "mid";
+      const busy = m.some((x) => x.status === "working");
+      return [{ a, link, busy }, ...this.tree(a.address).map((s) => ({ s, link: link && link !== "last" ? "through" : null, busy }))];
+    }).concat(shells.map((p) => ({ p })));
     return items.map((it, i) => {
       const last = end && i === items.length - 1;
-      return it.a ? this.agentRow(it.a, w, t, last) : it.s ? this.subRow(it.s, t) : this.shellRow(it.p, w, t, last);
+      const row = it.a ? this.agentRow(it.a, w, t, last) : it.s ? this.subRow(it.s, t) : this.shellRow(it.p, w, t, last);
+      return it.link ? this.linked(row, it.link, it.busy, w, t) : row;
     });
+  }
+
+  // One row's piece of the bracket joining a tab's agents: down the gutter left of
+  // their icons, curling in to each one, in the space's color. While any of them
+  // works it breathes.
+  linked(row, link, busy, w, t) {
+    const c = spaceFill(w, t);
+    const MID = 12; // an agent row's icon centre, from the row's top
+    const rail = div().absolute().left(5).w(9).border_color(c)
+      .when(link === "first", (el) => el.top(MID - 1).bottom(0).border_l(2).border_t(2).rounded_tl(6))
+      .when(link === "last", (el) => el.top(0).h(MID + 1).border_l(2).border_b(2).rounded_bl(6))
+      .when(link === "mid", (el) => el.top(0).bottom(0).border_l(2)
+        .child(div().absolute().left(0).top(MID - 1).w(7).h(2).bg(c)))
+      .when(link === "through", (el) => el.top(0).bottom(0).border_l(2))
+      .when(busy, (el) => el.loop("opacity", { from: 0.5, to: 1, period: 2600 }))
+      .when(!busy, (el) => el.opacity(0.6));
+    return div().relative().flex_none().child(row).child(rail);
   }
 
   // The selected terminal: an even tint of its space's color from frame to frame; as

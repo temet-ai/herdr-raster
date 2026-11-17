@@ -61,11 +61,15 @@ The mod fills the `spaces` block of the sidebar (268px wide in `main-raster`) on
   - Several spaces in one checkout are one project: one heading, all their terminals under
     it.
 - **Agent rows**, at least 24px, 3px vertical padding, 16px in, 9px gaps, 11.5px: the
-  program's 14px icon; what the agent is doing (a tab name someone typed, else the agent's
-  own title, else its program; its folder and " · " first when it works outside the
-  space's folder), wrapping to more lines rather than truncating, `muted` when idle and not
-  focused; then the time in its state (monospace 10px `dim`) and its status mark, both
-  aligned with the first line.
+  program's 14px icon; what the agent is doing (a tab name someone typed when it is the
+  tab's one agent, else the agent's own title, else its program; its folder and " · "
+  first when it works outside the space's folder), wrapping to more lines rather than
+  truncating, `muted` when idle and not focused; then the time in its state (monospace
+  10px `dim`) and its status mark, both aligned with the first line.
+- **Tab-mates**: agents sharing a tab are joined by a bracket in the gutter at 5px, 2px
+  in the space's color, rounded at its ends and reaching to 2px short of each icon's
+  centre line, with a tick to each agent between them and a plain line past sub-agent
+  rows. At 60% opacity, breathing between 50% and 100% every 2.6s while any of them works.
 - **Sub-agent rows** under their agent, 24px, 11px: tree lines (1.5px `input`, a rounded
   elbow at each), the 13px program icon, the name in `muted` (`foreground` and a `raised`
   fill while peeked), and a status mark.
