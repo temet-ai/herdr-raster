@@ -817,7 +817,8 @@ export default class Spaces extends View {
     const live = clean(p?.title ?? a.title);
     const telling = live && live !== prog && !/^[~/]|^[A-Za-z]:\\/.test(live) && !live.includes("@") && live.toLowerCase() !== a.program?.key;
     const alone = (this.bySpace.get(w.id) ?? []).filter((x) => x.tab === a.tab).length < 2;
-    const what = tab?.named && (alone || !telling) ? tab.name : telling ? live : prog || a.title || a.address;
+    // Tab-mates have the tab's name over them already, so they never repeat it.
+    const what = tab?.named && alone ? tab.name : telling ? live : prog || a.title || a.address;
     return { what, folder: this.elsewhere(p?.cwd, w), cwd: p?.cwd ?? "" };
   }
 
@@ -843,13 +844,32 @@ export default class Spaces extends View {
       const m = mates(a), k = m.indexOf(a);
       const link = m.length < 2 ? null : k === 0 ? "first" : k === m.length - 1 ? "last" : "mid";
       const busy = m.some((x) => x.status === "working");
-      return [{ a, link, busy }, ...this.tree(a.address).map((s) => ({ s, link: link && link !== "last" ? "through" : null, busy }))];
+      // The bracket starts at the tab's name, so its first agent takes a tick like the rest.
+      const tab = link === "first" ? (w.tabs ?? []).find((x) => x.id === a.tab) : null;
+      return [
+        ...(tab ? [{ label: tab.named ? tab.name : `tab ${tab.name}`, busy }] : []),
+        { a, link: link === "first" ? "mid" : link, busy },
+        ...this.tree(a.address).map((s) => ({ s, link: link && link !== "last" ? "through" : null, busy })),
+      ];
     }).concat(shells.map((p) => ({ p })));
     return items.map((it, i) => {
       const last = end && i === items.length - 1;
+      if (it.label) return this.tabLabel(it.label, it.busy, w, t);
       const row = it.a ? this.agentRow(it.a, w, t, last) : it.s ? this.subRow(it.s, t) : this.shellRow(it.p, w, t, last);
       return it.link ? this.linked(row, it.link, it.busy, w, t) : row;
     });
+  }
+
+  // The tab's name over its agents, where their bracket begins.
+  tabLabel(name, busy, w, t) {
+    const c = spaceFill(w, t);
+    return div().relative().flex_none().h(16).mt(2)
+      .child(div().absolute().left(5).top(8).bottom(0).w(9).border_l(2).border_t(2).rounded_tl(6).border_color(c)
+        .when(busy, (el) => el.loop("opacity", { from: 0.5, to: 1, period: 2600 }))
+        .when(!busy, (el) => el.opacity(0.6)))
+      .child(div().absolute().left(18).top(0).h(16).right(8).flex().items_center()
+        .font_family(mono()).text_size(9.5).text_color(c).opacity(0.85).truncate()
+        .child(name.toUpperCase()));
   }
 
   // One row's piece of the bracket joining a tab's agents: down the gutter left of
