@@ -585,7 +585,7 @@ export default class Spaces extends View {
     // `end`: the card's last space, whose last row fills to the card's bottom when selected.
     const draw = (r, end) => (collapsed ? [this.compact(r, t)]
       : r.head ? (this.foldedSpaces.has(r.head.id) ? [] : this.agentRows(r.w, t, end))
-      : [this.row(r, t), ...this.agentRows(r.w, t, end && !r.members?.length)]);
+      : [this.row(r, t), ...this.agentRows(r.w, t, end && !r.members?.length, r.tree ? 22 : 0)]);
     const remote = [...new Set([...rows.map(r => r.w.machine).filter(Boolean), ...this.machines.map(m => m.name), ...Object.keys(this.reconnecting)])].sort();
     const loading = m => {
       const layout = machines().find(k => k.name === m)?.layout;
@@ -721,7 +721,9 @@ export default class Spaces extends View {
   branchOf(g, name, t) {
     if (!g) return null;
     const b = g.branch ?? "detached";
-    const plain = b === "main" || b === "master" || b.toLowerCase() === name.toLowerCase();
+    // A worktree's folder spells its branch with dashes: wright-fixes-x is wright/fixes-x.
+    const key = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const plain = b === "main" || b === "master" || key(b) === key(name);
     if (plain && !(g.ahead > 0) && !(g.behind > 0)) return null;
     return { b, color: g.ahead > 0 ? t.ansi2 : g.behind > 0 ? t.ansi1 : t.dim };
   }
@@ -886,10 +888,12 @@ export default class Spaces extends View {
 
   // Under a space: its agents (with their sub-agents), then its other terminals.
   // `end`: these are the card's last rows, so the very last one meets the card's bottom.
-  agentRows(w, t, end) {
+  // `ind`: a worktree's rows step in as far as its heading does.
+  agentRows(w, t, end, ind = 0) {
     const list = this.bySpace.get(w.id) ?? [];
     const shells = this.shellsBySpace.get(w.id) ?? [];
     if ((!list.length && !shells.length) || this.foldedSpaces.has(w.id)) return [];
+    this.ind = ind; // read by the row builders below, which run before this returns
     // Agents sharing a tab (they come in tab order) are joined by a bracket: `link` is
     // where a row sits in it ("first", "mid", "last"), `through` a sub-agent row it passes.
     const mates = (a) => list.filter((x) => x.tab === a.tab);
@@ -920,14 +924,14 @@ export default class Spaces extends View {
     const c = spaceFill(w, t);
     const editing = this.renaming?.id === tab.id;
     return div().id(`tab-label-${tab.id}`).relative().flex_none().h(16).mt(2)
-      .child(div().absolute().left(5).top(8).bottom(0).w(9).border_l(2).border_t(2).rounded_tl(6).border_color(c)
+      .child(div().absolute().left(5 + this.ind).top(8).bottom(0).w(9).border_l(2).border_t(2).rounded_tl(6).border_color(c)
         .when(busy, (el) => el.loop("opacity", { from: 0.5, to: 1, period: 2600 }))
         .when(!busy, (el) => el.opacity(0.6)))
       .when(editing, (el) => el.child(div().absolute().left(16).top(-1).h(18).right(8).px(2).rounded(4)
         .border_1().border_color(c + "90").bg(t.chrome)
         .on_key_down((e, cx) => { if (e.key === "escape") this.endRename(false, cx); })
         .child(Input.new(this.renaming.input).w_full().h_full().font_family(mono()).text_size(9.5).text_color(t.foreground))))
-      .when(!editing, (el) => el.child(div().id(`tab-name-${tab.id}`).absolute().left(18).top(0).h(16).max_w(220).flex().items_center()
+      .when(!editing, (el) => el.child(div().id(`tab-name-${tab.id}`).absolute().left(18 + this.ind).top(0).h(16).max_w(220).flex().items_center()
         .cursor_text().tooltip("Rename this tab")
         .font_family(mono()).text_size(9.5).text_color(c).opacity(0.85).hover((s) => s.opacity(1)).truncate()
         .on_click((_e, cx) => this.startRename(tab, cx))
@@ -958,7 +962,7 @@ export default class Spaces extends View {
   linked(row, link, busy, w, t) {
     const c = spaceFill(w, t);
     const MID = 12; // an agent row's icon centre, from the row's top
-    const rail = div().absolute().left(5).w(9).border_color(c)
+    const rail = div().absolute().left(5 + this.ind).w(9).border_color(c)
       .when(link === "first", (el) => el.top(MID - 1).bottom(0).border_l(2).border_t(2).rounded_tl(6))
       .when(link === "last", (el) => el.top(0).h(MID + 1).border_l(2).border_b(2).rounded_bl(6))
       .when(link === "mid", (el) => el.top(0).bottom(0).border_l(2)
@@ -987,7 +991,7 @@ export default class Spaces extends View {
     const folder = this.elsewhere(p.cwd, w);
     return h_flex()
       .id(`term-${p.pane}`)
-      .h(24).pl(16).pr(8).flex_none().rounded(6).items_center().gap(9).text_size(11.5)
+      .h(24).pl(16 + this.ind).pr(8).flex_none().rounded(6).items_center().gap(9).text_size(11.5)
       .when(p.focused, (el) => this.selected(el, w, t, last))
       .hover((s) => s.bg(t.hover))
       .cursor_pointer()
@@ -1013,7 +1017,7 @@ export default class Spaces extends View {
       // second line rather than lose itself behind the time and status.
       // Everything lines up with the name's first line, however many lines it takes.
       // Indented a step in from the space's tile (8): 16, then the icon and the text.
-      .min_h(24).py(3).pl(16).pr(8).flex_none().rounded(6).items_start().gap(9).text_size(11.5)
+      .min_h(24).py(3).pl(16 + this.ind).pr(8).flex_none().rounded(6).items_start().gap(9).text_size(11.5)
       .when(a.focused, (el) => this.selected(el, w, t, last))
       .hover((s) => s.bg(t.hover))
       .cursor_pointer()
@@ -1036,7 +1040,7 @@ export default class Spaces extends View {
     const on = k.address === this.shownAgent;
     return h_flex()
       .id(`sub-${k.address}`)
-      .h(24).pl(16).pr(8).flex_none().rounded(7).items_center().text_size(11)
+      .h(24).pl(16 + this.ind).pr(8).flex_none().rounded(7).items_center().text_size(11)
       .when(on, (el) => el.bg(t.raised))
       .hover((x) => x.bg(t.hover))
       .cursor_pointer()
