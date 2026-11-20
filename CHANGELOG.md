@@ -35,6 +35,8 @@ Sections use these headings, leaving out any with nothing in them: **New**,
   `wright-fixes-2026-11-20` on branch `wright/fixes-2026-11-20` counted as a different name,
   so the branch showed next to it. Names that differ only in `/`, `-` or case now
   count as the same.
+- **A project heading takes one line when it has no branch to show.** Its fold
+  chevron sat on a second line under the rule by itself; it now ends the rule's line.
 
 ## 0.2.0 (2026-11-17)
 

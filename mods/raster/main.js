@@ -742,7 +742,7 @@ export default class Spaces extends View {
       .px(8)
       .mt(5)
       .pt(3)
-      .h(28)
+      .h(br ? 28 : 22)
       .flex_none()
       .rounded(6)
       .hover((s) => s.bg(t.hover))
@@ -786,13 +786,20 @@ export default class Spaces extends View {
           .when(!tree && !this.projectIcons[g?.name], el => el.child(h_flex().size(18).flex_none().rounded(4).bg(fill).items_center().justify_center().text_size(10.5).font_bold().text_color("#ffffff").child([...w.name][0]?.toUpperCase() ?? "?")))
           .child(div().ml(7).mr(8).flex_none().max_w(150).truncate().font_family(mono()).text_size(11).font_semibold()
             .text_color(on ? t.foreground : t.muted).child(w.name.toUpperCase()))
-          .child(v_flex().flex_1().min_w(12).gap(3)
-            // The shown space's line carries on past the row's padding into the frame.
+          // The shown space's line carries on past the row's padding into the frame.
+          // With a branch to show, it and the fold sit on a second line under the rule;
+          // without one, the fold ends the rule's own line and the heading is one line.
+          .when(Boolean(br), (el) => el.child(v_flex().flex_1().min_w(12).gap(3)
             .child(div().relative().h(1.5).bg(on ? fill : fill + "73")
               .when(on, (el) => el.child(div().absolute().top(0).right(-8 - CARD_PAD).w(8 + CARD_PAD).h(1.5).bg(fill))))
             .child(h_flex().min_w(0).gap(6).justify_end().items_center().font_family(mono()).text_size(10)
-              .when(Boolean(br), (el) => el.child(div().min_w(0).truncate().text_color(br.color).child(br.b)))
-              .when(fold, (el) => el.child(this.spaceFold(w, t, members))))),
+              .child(div().min_w(0).truncate().text_color(br.color).child(br.b))
+              .when(fold, (el) => el.child(this.spaceFold(w, t, members))))))
+          .when(!br, (el) => el.child(h_flex().flex_1().min_w(12).h(18).gap(6).items_center()
+            .child(div().flex_1().h(1.5).bg(on ? fill : fill + "73"))
+            .when(fold, (el) => el.child(this.spaceFold(w, t, members)))
+            .when(on && !fold, (el) => el.child(div().relative().w(0).h(1.5)
+              .child(div().absolute().top(0).left(-6).w(14 + CARD_PAD).h(1.5).bg(fill)))))),
       );
   }
 
