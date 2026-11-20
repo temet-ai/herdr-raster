@@ -32,7 +32,7 @@ Sections use these headings, leaving out any with nothing in them: **New**,
   main checkout's agents, so they looked like part of the project above. They now
   step in as far as the worktree's heading does.
 - **A worktree's branch isn't repeated beside its name.** A folder named
-  `fixes-2026-11-20` on branch `wright/fixes-2026-11-20` counted as a different name,
+  `wright-fixes-2026-11-20` on branch `wright/fixes-2026-11-20` counted as a different name,
   so the branch showed next to it. Names that differ only in `/`, `-` or case now
   count as the same.
 
