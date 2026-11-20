@@ -37,6 +37,11 @@ Sections use these headings, leaving out any with nothing in them: **New**,
   count as the same.
 - **A project heading takes one line when it has no branch to show.** Its fold
   chevron sat on a second line under the rule by itself; it now ends the rule's line.
+- **A project heading names the repo its terminals are in now.** A space named after
+  the folder it started in (as scripts that open spaces name them) kept that name
+  after its terminals moved to another repo, so the heading said one project while
+  its logo showed another. Such a name now follows the space's live folder, like an
+  unnamed space's; a name you chose stays.
 
 ## 0.2.0 (2026-11-17)
 

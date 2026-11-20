@@ -479,7 +479,7 @@ export default class Spaces extends View {
       ]);
       const name = repo.endsWith("/.git") ? base(repo.slice(0, -5)) : base(repo).replace(/\.git$/, "");
       const [ahead, behind] = counts.code === 0 ? counts.stdout.trim().split(/\s+/).map(Number) : [0, 0];
-      const info = { name, branch: branch.code === 0 ? branch.stdout.trim().replace(/^refs\/heads\//, "") : "(detached)", ahead, behind, repo: JSON.stringify([on, repo]), linked: repo !== `${top}/.git` };
+      const info = { name, branch: branch.code === 0 ? branch.stdout.trim().replace(/^refs\/heads\//, "") : "(detached)", ahead, behind, repo: JSON.stringify([on, repo]), top, linked: repo !== `${top}/.git` };
       this.git[key] = info;
       if (!on) this.watch(repo, cx);
     } catch {
@@ -728,7 +728,17 @@ export default class Spaces extends View {
     return { b, color: g.ahead > 0 ? t.ansi2 : g.behind > 0 ? t.ansi1 : t.dim };
   }
 
+  // What a space's heading says: the name it was given, else the repo its first terminal
+  // is in now, the same place its logo comes from. A name that is only the folder the
+  // space began in (mike's spawn names spaces so) is a place, not a name: it follows too.
+  title(w, g) {
+    const chosen = w.named && w.name !== base(w.folder ?? "");
+    if (chosen || !g) return w.name;
+    return g.linked && g.top ? base(g.top) : g.name;
+  }
+
   row({ w, i, g, tree, members = [] }, t) {
+    w = { ...w, name: this.title(w, g) };
     const on = w.active || members.some((m) => m.active);
     const fromIndex = this.pressed === null ? -1 : spaces().findIndex(s => s.id === this.pressed);
     const fill = spaceFill(w, t);
